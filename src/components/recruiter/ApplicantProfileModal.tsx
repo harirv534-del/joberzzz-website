@@ -24,10 +24,26 @@ export const ApplicantProfileModal: React.FC<Props> = ({ jobTitle, candidateName
     })();
   }, [authed, jobTitle, candidateName]);
 
-  const openResume = async () => { try { setResumeUrl(await fetchResumeBlob(profile.id)); } catch (e: any) { setError(e.message); } };
+  // Resume source: secure Django endpoint when the application is synced, otherwise the candidate's stored resume record.
+  let localResume: any = null;
+  try {
+    const list = JSON.parse(localStorage.getItem(`joberzzz_resumes_${candidate?.id}`) || '[]');
+    localResume = list.find((r: any) => r.is_primary) || list[0] || null;
+  } catch { /* none */ }
+  const resumeName: string | null = profile?.resume?.file_name || localResume?.file_name || null;
+  const loadFile = async (dl: boolean) => {
+    if (profile?.resume) return fetchResumeBlob(profile.id, dl);
+    const src = localResume?.file_data || localResume?.file_url;
+    const res = await fetch(src);
+    if (!res.ok) throw new Error('missing');
+    const blob = await res.blob();
+    return { url: URL.createObjectURL(blob), type: localResume.file_type || blob.type };
+  };
+  const unavailable = 'The original resume file is no longer available. Ask the candidate to re-upload it.';
+  const openResume = async () => { try { setError(''); setResumeUrl(await loadFile(false)); } catch { setError(unavailable); } };
   const download = async () => {
-    try { const r = await fetchResumeBlob(profile.id, true); const a = document.createElement('a'); a.href = r.url; a.download = profile.resume.file_name; a.click(); }
-    catch (e: any) { setError(e.message); }
+    try { setError(''); const r = await loadFile(true); const a = document.createElement('a'); a.href = r.url; a.download = resumeName || 'resume'; a.click(); }
+    catch { setError(unavailable); }
   };
   const c = profile?.candidate || (candidate && { email: candidate.email, phone: candidate.phone, location: candidate.location,
     experience_years: candidate.experience_years ?? 0, headline: candidate.headline, bio: candidate.bio, skills: candidate.skills || [] });
@@ -61,12 +77,19 @@ export const ApplicantProfileModal: React.FC<Props> = ({ jobTitle, candidateName
             </div>
             {view.cover_letter && <p className="text-sm text-slate-600 p-3 rounded-xl bg-slate-50 border border-slate-200">{view.cover_letter}</p>}
             <div className="flex flex-wrap gap-2">
-              {profile?.resume && <>
-                <button onClick={openResume} className="px-3 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer"><FileText className="w-4 h-4" /> View Resume</button>
-                <button onClick={download} className="px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold flex items-center gap-1.5 cursor-pointer"><Download className="w-4 h-4" /> Download</button>
-              </>}
+
               {profile && <button onClick={() => setShowChat(s => !s)} className="px-3 py-2 rounded-xl border border-blue-300 text-blue-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer"><MessageSquare className="w-4 h-4" /> Message</button>}
             </div>
+            {resumeName && (
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Resume</p>
+                <p className="text-sm text-slate-800 flex items-center gap-1.5"><FileText className="w-4 h-4 text-blue-600" /> {resumeName}</p>
+                <div className="flex flex-wrap gap-2">
+                  <button onClick={openResume} className="px-3 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer"><FileText className="w-4 h-4" /> View Resume</button>
+                  <button onClick={download} className="px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold flex items-center gap-1.5 cursor-pointer"><Download className="w-4 h-4" /> Download Resume</button>
+                </div>
+              </div>
+            )}
             {resumeUrl && (resumeUrl.type.includes('pdf')
               ? <iframe src={resumeUrl.url} title="Resume" className="w-full h-[60vh] rounded-xl border border-slate-200" />
               : <a href={resumeUrl.url} download className="text-sm text-blue-700 underline">Open file</a>)}

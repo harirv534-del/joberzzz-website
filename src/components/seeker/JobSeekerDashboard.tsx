@@ -236,6 +236,19 @@ export const JobSeekerDashboard: React.FC = () => {
 
     setIsAnalyzingResume(true);
 
+    // Keep the original uploaded file so authorized recruiters can view/download it (separate key; resume list unchanged).
+    if (user?.id && file.size <= 3 * 1024 * 1024) {
+      const fileReader = new FileReader();
+      fileReader.onload = () => {
+        try {
+          localStorage.setItem(`joberzzz_resumefile_${user.id}`, JSON.stringify({
+            file_name: file.name, file_type: file.type || 'application/octet-stream', data: fileReader.result,
+          }));
+        } catch { /* storage full: recruiter view falls back gracefully */ }
+      };
+      fileReader.readAsDataURL(file);
+    }
+
     // Read file if text-like or construct simulated text parsing
     const reader = new FileReader();
     reader.onload = async event => {

@@ -33,11 +33,14 @@ export const ApplicantProfileModal: React.FC<Props> = ({ jobTitle, candidateName
   const resumeName: string | null = profile?.resume?.file_name || localResume?.file_name || null;
   const loadFile = async (dl: boolean) => {
     if (profile?.resume) return fetchResumeBlob(profile.id, dl);
-    const src = localResume?.file_data || localResume?.file_url;
+    let stored: any = null;
+    try { stored = JSON.parse(localStorage.getItem(`joberzzz_resumefile_${candidate?.id}`) || 'null'); } catch { /* none */ }
+    const useStored = stored?.data && stored.file_name === localResume?.file_name;
+    const src = useStored ? stored.data : (localResume?.file_data || localResume?.file_url);
     const res = await fetch(src);
     if (!res.ok) throw new Error('missing');
     const blob = await res.blob();
-    return { url: URL.createObjectURL(blob), type: localResume.file_type || blob.type };
+    return { url: URL.createObjectURL(blob), type: (useStored ? stored.file_type : localResume.file_type) || blob.type };
   };
   const unavailable = 'The original resume file is no longer available. Ask the candidate to re-upload it.';
   const openResume = async () => { try { setError(''); setResumeUrl(await loadFile(false)); } catch { setError(unavailable); } };

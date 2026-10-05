@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/NotificationContext';
 import { VerificationStatusPill } from '../common/VerificationStatusPill';
 import { Job, Application, ApplicationStatus } from '../../types';
+import { ApplicantProfileModal } from './ApplicantProfileModal';
 import { LocationSelect, LocationValue } from '../common/LocationSelect';
 import { formatLocation } from '../../lib/indiaLocations';
 import {
@@ -44,6 +45,7 @@ export const RecruiterDashboard: React.FC = () => {
   } = useAuth();
   const toast = useToast();
 
+  const [profileAppId, setProfileAppId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'jobs' | 'candidates' | 'analytics' | 'company'>('jobs');
   const [isPostingModalOpen, setIsPostingModalOpen] = useState(false);
   const [postFeedback, setPostFeedback] = useState<{ success: boolean; msg: string } | null>(null);
@@ -489,6 +491,19 @@ export const RecruiterDashboard: React.FC = () => {
                         <option value="selected">Selected</option>
                         <option value="rejected">Rejected</option>
                       </select>
+                      <button
+                        onClick={() => setProfileAppId(app.id)}
+                        className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border border-blue-300 text-blue-700 bg-white hover:bg-blue-50 cursor-pointer"
+                      >
+                        View Profile
+                      </button>
+                      {profileAppId === app.id && (
+                        <ApplicantProfileModal
+                          jobTitle={targetJob?.title || ''}
+                          candidateName={app.candidate?.full_name || ''}
+                          onClose={() => setProfileAppId(null)}
+                        />
+                      )}
                     </div>
                   </div>
                 );

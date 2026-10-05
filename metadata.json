@@ -1,0 +1,6 @@
+{
+  "name": "Joberzzz - Recruitment Ecosystem",
+  "description": "Production-ready recruitment platform for Job Seekers, Recruiters, and Admins with AI ATS resume analysis, job matching, and interview prep.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Joberzzz</string>
+    <string name="title_activity_main">Joberzzz</string>
+    <string name="package_name">com.joberzzz.app</string>
+    <string name="custom_url_scheme">com.joberzzz.app</string>
+</resources>

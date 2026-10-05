@@ -501,6 +501,10 @@ export const RecruiterDashboard: React.FC = () => {
                         <ApplicantProfileModal
                           jobTitle={targetJob?.title || ''}
                           candidateName={app.candidate?.full_name || ''}
+                          candidate={app.candidate}
+                          matchPct={matchPct}
+                          status={app.status}
+                          coverLetter={app.cover_letter}
                           onClose={() => setProfileAppId(null)}
                         />
                       )}
